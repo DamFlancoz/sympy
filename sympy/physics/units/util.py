@@ -99,12 +99,12 @@ def convert_to(expr, target_units, unit_system="SI"):
         target_units = [target_units]
 
     if isinstance(expr, Add):
-        return Add.fromiter(convert_to(i, target_units, unit_system) for i in expr.args)
+        return expr.simplify()
 
     expr = sympify(expr)
 
     if not isinstance(expr, Quantity) and expr.has(Quantity):
-        expr = expr.replace(lambda x: isinstance(x, Quantity), lambda x: x.convert_to(target_units, unit_system))
+        expr = expr.replace(lambda x: isinstance(x, (Quantity, Add)), lambda x: convert_to(x,target_units, unit_system))
 
     def get_total_scale_factor(expr):
         if isinstance(expr, Mul):
