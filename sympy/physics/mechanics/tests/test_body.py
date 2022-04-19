@@ -1,7 +1,8 @@
-from sympy.core.backend import Symbol, symbols, sin, cos, Matrix
+from sympy.core.backend import Symbol, symbols, sin, cos, sqrt, Matrix
 from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
 from sympy.physics.mechanics import inertia, Body
 from sympy.testing.pytest import raises
+from sympy import S
 
 def test_default():
     body = Body('body')
@@ -273,3 +274,61 @@ def test_apply_loads_on_multi_degree_freedom_holonomic_system():
     assert P.loads == [(P.masscenter, P.mass*g*W.y), (P.frame, (T + kT*q2)*W.z)]
     assert b.loads == [(b.masscenter, b.mass*g*W.y), (b.frame, -kT*q2*W.z)]
     assert W.loads == [(W.masscenter, (c*q1.diff() + k*q1)*W.x)]
+
+def test_orient_axis():
+    
+    Body_A = Body('A')
+    Body_B = Body('B')
+    Ref_N = ReferenceFrame('N')
+    Body_A.orient_axis(Ref_N, Ref_N.x + Ref_N.y, 15)
+    Body_B.orient_axis(Body_A, Body_A.x + Body_A.y, 15)
+    dcm = Matrix([[cos(10)/2 + S.Half, S.Half - cos(10)/2, -sqrt(2)*sin(10)/2], 
+                [S.Half - cos(10)/2, cos(10)/2 + S.Half, sqrt(2)*sin(10)/2], 
+                [sqrt(2)*sin(10)/2, -sqrt(2)*sin(10)/2, cos(10)]])
+    assert Body_B.dcm(Body_A) == Body_A.dcm(Ref_N) == dcm
+
+def test_orient_explicit():
+    Body_A = Body('A')
+    Body_B = Body('B')
+    Ref_N = ReferenceFrame('N')
+    dcm = Matrix([[cos(10), 0, -sin(10)], 
+                [sin(10)**2, cos(10), sin(10)*cos(10)], 
+                [sin(10)*cos(10), -sin(10), cos(10)**2]])
+    Body_A.orient_explicit(Ref_N, dcm)
+    Body_B.orient_explicit(Body_A, dcm)
+    assert Body_A.dcm(Body_B) == Ref_N.dcm(Body_A.frame) == dcm
+
+def test_orient_body_fixed():
+    Body_A = Body('A')
+    Body_B = Body('B')
+    Ref_N = ReferenceFrame('N')
+    Body_A.orient_body_fixed(Ref_N, (1,1,0), 'XYX')
+    Body_B.orient_body_fixed(Body_A, (1,1,0), 'XYX')
+    dcm = Matrix([[cos(1), sin(1)**2, -sin(1)*cos(1)], 
+                [0, cos(1), sin(1)], 
+                [sin(1), -sin(1)*cos(1), cos(1)**2]])
+    assert Body_A.dcm(Ref_N) == Body_B.dcm(Body_A) == dcm
+
+def test_orient_space_fixed():
+    Body_A = Body('A')
+    Body_B = Body('B')
+    Ref_N = ReferenceFrame('N')
+    Body_A.orient_space_fixed(Ref_N, (1,2,3), 'ZXY')
+    Body_B.orient_space_fixed(Body_A, (1,2,3), 'ZXY')
+    dcm = Matrix([[cos(1)*cos(3) + sin(1)*sin(2)*sin(3), sin(1)*cos(2),
+                    sin(1)*sin(2)*cos(3) - sin(3)*cos(1)], 
+                [sin(2)*sin(3)*cos(1) - sin(1)*cos(3), cos(1)*cos(2),
+                    sin(2)*cos(1)*cos(3) + sin(1)*sin(3)], 
+                [sin(3)*cos(2), -sin(2), cos(2)*cos(3)]])
+    assert Body_A.dcm(Ref_N) == Body_B.dcm(Body_A) == dcm
+
+def test_orient_quaternion():
+    Body_A = Body('A')
+    Body_B = Body('B')
+    Ref_N = ReferenceFrame('N')
+    Body_A.orient_quaternion(Ref_N, (1,2,3,4))
+    Body_B.orient_quaternion(Body_A, (1,2,3,4))
+    dcm = Matrix([[-20, 20, 10], 
+                [ 4, -10, 28], 
+                [ 22, 20, 4]])
+    assert Body_A.dcm(Ref_N) == Body_B.dcm(Body_A) == dcm

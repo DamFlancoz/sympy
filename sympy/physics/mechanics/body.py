@@ -562,3 +562,43 @@ class Body(RigidBody, Particle):  # type: ignore
         elif isinstance(body, Body):
             frame = body.frame
         return self.frame.dcm(frame)
+
+    def orient_axis(self, parent, axis, angle):
+        
+        if isinstance(parent, Body):
+            frame = parent.frame
+        elif isinstance(parent, ReferenceFrame):
+            frame = parent
+        self.frame.orient_axis(frame, axis, angle)
+
+    def orient_explicit(self, parent, dcm):
+
+        if isinstance(parent, Body):
+            frame = parent.frame
+        elif isinstance(parent, ReferenceFrame):
+            frame = parent
+        self.frame.orient_explicit(frame, dcm)
+
+    def orient_body_fixed(self, parent, angles, rotation_order):
+
+        if isinstance(parent, Body):
+            frame = parent.frame
+        elif isinstance(parent, ReferenceFrame):
+            frame = parent
+        self.frame.orient_body_fixed(frame, angles, rotation_order)
+
+    def orient_space_fixed(self, parent, angles, rotation_order):
+
+        if isinstance(parent, Body):
+            frame = parent.frame
+        elif isinstance(parent, ReferenceFrame):
+            frame = parent
+        self.frame.orient_space_fixed(frame, angles, rotation_order)
+
+    def orient_quaternion(self, parent, numbers):
+
+        if isinstance(parent, Body):
+            frame = parent.frame
+        elif isinstance(parent, ReferenceFrame):
+            frame = parent
+        self.frame.orient_quaternion(frame, numbers)
